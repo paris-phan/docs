@@ -1,0 +1,63 @@
+---
+title: "Workstation"
+description: "The machine, shell, and CLI toolbelt — fully reproducible from a single dotfiles bootstrap."
+---
+
+The entire development environment is codified in [`dotfiles`](https://github.com/paris-phan/dotfiles) and reproducible from a clean M4 Mac with a one-command bootstrap (`install.sh`, 15 ordered steps).
+
+## The machine
+
+- **Hardware:** Apple Silicon M4 Mac Mini (Darwin 25.5.0)
+- **Shell:** `fish` (login) with `fisher` plugins; `zsh` fallback
+- **Prompt:** [starship](https://starship.rs/)
+
+## CLI toolbelt
+
+Installed via a `Brewfile`:
+
+<CardGroup cols={3}>
+  <Card title="Navigation" icon="folder-open">
+    `bat`, `eza`, `zoxide`, `tree`
+  </Card>
+  <Card title="Environment" icon="box">
+    `direnv`, `miniconda`
+  </Card>
+  <Card title="Platform" icon="server">
+    `node`, `postgresql@18`, `cocoapods`, `gh`
+  </Card>
+</CardGroup>
+
+## Apps (casks)
+
+Claude desktop · VS Code · Figma · Linear · Notion + Notion Calendar · Raycast · Slack · Chrome · GitHub Desktop · LinearMouse · BetterDisplay · Ice / AltTab.
+
+## Managed, version-controlled configs
+
+Everything below is symlinked from `dotfiles`, so the configuration is the source of truth — not the machine.
+
+<AccordionGroup>
+  <Accordion title="Symlinked configs" icon="link">
+    `fish`, `git`, `ssh`, VS Code (settings, keybindings, snippets, extensions), LinearMouse, `gh`, and Claude Code config.
+  </Accordion>
+  <Accordion title="System setup" icon="cog">
+    `LaunchAgents`, macOS `defaults.sh`, and Conda environment restore.
+  </Accordion>
+</AccordionGroup>
+
+## Bootstrap a clean machine
+
+<Steps>
+  <Step title="Clone dotfiles">
+    Pull the `dotfiles` repo onto the fresh machine.
+  </Step>
+  <Step title="Run the installer">
+    `install.sh` runs 15 ordered steps — Homebrew packages and casks, symlinks, macOS defaults, and Conda restore.
+  </Step>
+  <Step title="Sign in to services">
+    Authenticate `gh` and Claude; the rest of the configuration is already in place.
+  </Step>
+</Steps>
+
+<Tip>
+  Because the machine is rebuildable from config, experiments are cheap — a broken setup is one bootstrap away from clean.
+</Tip>

@@ -1,0 +1,79 @@
+---
+title: "Relic"
+description: "An early memory layer for AI-native teams — ingests engineering history into a temporal knowledge graph and serves grounded answers and executable skills to coding agents over MCP."
+---
+
+Relic is an early memory layer for AI-native teams. It ingests engineering history — pull requests, issues, reviews, commits — structures it in a temporal knowledge graph, and serves grounded answers and executable skills to coding agents through a Model Context Protocol (MCP) server.
+
+<CardGroup cols={2}>
+  <Card title="Audience" icon="users">
+    Developer infrastructure / AI agent tooling. Runs locally or as a team service.
+  </Card>
+  <Card title="Role" icon="user">
+    Founding engineer / co-creator (with Abhinav and Zidan) — capture/ingestion pipeline, deterministic data mapping, and token optimization.
+  </Card>
+</CardGroup>
+
+Coding agents like Claude Code, Cursor, and Gemini CLI can query organizational context and run verified team procedures with clear source citations.
+
+## Tech stack
+
+- **Language & workspace:** Python 3.12 on a [`uv`](https://docs.astral.sh/uv/) workspace
+- **Graph database:** [FalkorDB](https://falkordb.com/) (self-hosted via Docker in dev)
+- **Skill store:** SQLite
+- **MCP framework:** [FastMCP](https://github.com/jlowin/fastmcp)
+- **Graph memory engine:** [Graphiti](https://github.com/getgraphiti/graphiti)
+
+## Two halves, cleanly decoupled
+
+Relic is built around a clean split between its two primary halves, which interact **only** through injected interfaces (e.g. `RecallFn`) wired at the CLI composition root.
+
+```mermaid
+graph LR
+    subgraph Capture, Memory & Recall
+      ING[Ingest connectors<br/>GitHub + Linear] --> MAP[Deterministic mappers]
+      MAP --> GRAPH[(FalkorDB<br/>per-repo graphs)]
+      GRAPH --> RECALL[Semantic + keyword recall]
+    end
+    subgraph Skills & Serving
+      REG[(SQLite skill registry)] --> MCP[FastMCP server]
+    end
+    RECALL -. RecallFn injected .-> MCP
+    MCP --> AGENT([Coding agents])
+```
+
+<Card title="Resilient by design" icon="shield-check">
+  The serving layer stays functional even if the graph database or LLM network is unreachable — it never imports graph or OpenAI dependencies directly.
+</Card>
+
+## Key primitives
+
+<AccordionGroup>
+  <Accordion title="Graphiti" icon="brain">
+    The graph memory engine — entity/edge extraction via OpenAI, vector embedding generation, and semantic recall.
+  </Accordion>
+  <Accordion title="FalkorDB" icon="database">
+    A multi-tenant graph database hosting partitioned per-repository graphs, chosen for RediSearch full-text integration and multi-database support.
+  </Accordion>
+  <Accordion title="FastMCP" icon="plug">
+    Exposes registered skills dynamically as tools and markdown resources, plus search and memory-recall capabilities.
+  </Accordion>
+</AccordionGroup>
+
+## Local commands
+
+The project is driven by `just`:
+
+| Command | What it does |
+|---|---|
+| `just up` | Spin up FalkorDB (Docker) |
+| `just setup` | Initialize environment and virtualenv |
+| `just ingest owner/name [limit]` | Ingest a repository's history (e.g. `just ingest astral-sh/uv 20`) |
+| `just recall "query text"` | Run a recall query |
+| `just serve` | Expose the MCP server (`relic serve`) |
+| `just doctor` | Verify health status |
+| `just check` | Run CI checks (ruff, pyright, pytest, import-linter) |
+
+<Card title="Read the architecture deep dive" icon="layers" href="/ventures/relic/architecture">
+  The decoupled skill registry, deterministic ingestion with token budgeting, and per-repo graph partitioning with cited provenance.
+</Card>

@@ -1,0 +1,114 @@
+---
+title: "Relic architecture"
+description: "The decoupled skill registry and MCP serving engine, deterministic ingestion with token budgeting, and per-repo graph partitioning with cited provenance."
+---
+
+How Relic stays cheap, deterministic, and resilient — from the contract that defines a skill to the partitioning that keeps each repo's memory isolated and every fact cited.
+
+## 1. Decoupled skill registry & MCP serving engine
+
+Relic stores, validates, and serves standard team operating procedures ("skills") to coding agents. Skills are validated against a strict contract, registered in SQLite, moved through a lifecycle (`draft → verified → deprecated`), and the verified ones are served as MCP tools and resources.
+
+<CardGroup cols={2}>
+  <Card title="The contract" icon="file-check">
+    The `SkillIR` Pydantic model is the single source of truth for a skill's metadata, inputs, outputs, preconditions, safety checks, and citations. The MCP tool input schema is built dynamically from `SkillIR.inputs`.
+  </Card>
+  <Card title="Lifecycle in SQLite" icon="database">
+    Skills live in SQLite. When a skill is verified, its `last_verified_at` updates and it becomes eligible to be served or written to disk.
+  </Card>
+</CardGroup>
+
+The MCP server takes a `RecallFn` by **injection**, so the serving package never imports any graph or OpenAI dependency — it keeps serving skills even when FalkorDB is offline.
+
+```python
+def build_server(
+    conn: sqlite3.Connection, *, recall_fn: RecallFn | None = None, name: str = "relic"
+) -> FastMCP:
+    """Build the server: skills as tools and resources, search, and recall when provided."""
+    skills = list_skills(conn, status="verified")
+    mcp = FastMCP(name, instructions=_INSTRUCTIONS)
+    for skill in skills:
+        mcp.add_tool(_skill_tool(skill))
+        mcp.add_resource(_skill_resource(skill))
+    mcp.add_tool(_search_skills_tool(skills))
+    if recall_fn is not None:
+        mcp.add_tool(_recall_tool(recall_fn))
+    return mcp
+```
+
+<Note>
+  **Reference:** `packages/relic-serve/src/relic/serve/mcp_server.py`; contract in `packages/relic-core/src/relic/ontology/skill_ir.py`.
+</Note>
+
+## 2. Deterministic ingestion, token budgeting & a checkpoint ledger
+
+Relic collects issue and PR histories from GitHub and Linear, buffers them in a raw filesystem store, maps them to structured episode specs, and loads them into the graph sequentially — under strict budget control.
+
+<Steps>
+  <Step title="Deterministic mappers">
+    Connectors and `mappers.py` run with **zero LLM usage**, structuring API responses into `PrEpisodeBody` and `IssueEpisodeBody` models.
+  </Step>
+  <Step title="Token & content bounding">
+    Descriptions are clipped to 2,000 characters, commits to 1,000; bot reviews are dropped and human reviews are capped and filtered. The payload is then fitted to a strict token budget with `_fit_budget`.
+  </Step>
+  <Step title="Idempotent checkpoint ledger">
+    A ledger tracks already-ingested episodes (e.g. `PR owner/name#42`) under `./data/ingest/<group_id>.log`. Re-runs skip these entries, making ingestion resilient to interruptions and rate limits.
+  </Step>
+</Steps>
+
+<Note>
+  **Reference:** `packages/relic-ingest/src/relic/ingest/mappers.py` and `.../ingest/checkpoint.py`.
+</Note>
+
+## 3. Per-repo graph partitioning & provenance recall
+
+Knowledge graphs are partitioned by repository using FalkorDB's multi-database support, and queries return facts with cited issue/PR URLs.
+
+<CardGroup cols={2}>
+  <Card title="Per-repo partitioning" icon="split">
+    A repo name maps to a safe database name (`buildrelic/relic-core` → `buildrelic__relic-core`). Ingestion clones the Graphiti driver scoped to that database (`driver.clone(database=group_id)`); search passes the same `database = group_id`.
+  </Card>
+  <Card title="Fact provenance" icon="quote">
+    Recall maps search hits back to their source episodes via `_resolve_sources`, extracting the canonical issue or PR URL (e.g. `https://github.com/owner/name/pull/12`) to build a fully cited response.
+  </Card>
+</CardGroup>
+
+<Note>
+  **Reference:** `packages/relic-graph/src/relic/graph/recall.py`.
+</Note>
+
+## The hardest problem
+
+**FalkorDB upstream integration and Graphiti patching.** Migrating memory storage from embedded Kuzu to FalkorDB unlocked multi-database partitioning and RediSearch full-text support, but introduced two compatibility issues with `graphiti-core 0.29.x`:
+
+<AccordionGroup>
+  <Accordion title="Empty full-text queries crashed writes" icon="circle-x">
+    Queries containing only stopwords or punctuation generated empty parentheses, crashing write operations.
+  </Accordion>
+  <Accordion title="Hyphens in group IDs broke search" icon="minus">
+    Hyphens (e.g. `relic-core`) were treated as negation operators, breaking search queries.
+  </Accordion>
+</AccordionGroup>
+
+Both were resolved in `engram.py` by monkeypatching the Graphiti query builders (`_patch_falkordb_empty_query`) to sanitize empty queries and escape hyphens dynamically before execution.
+
+## Performance & DX
+
+<CardGroup cols={2}>
+  <Card title="Deterministic scorecard" icon="ruler">
+    Instead of an LLM-as-judge, the evaluation suite does exact URL matching against gold sets — normalizing trailing slashes and casing — and computes Hit Rate, MRR, and Coverage. Recall tuning stays fast, cheap, and deterministic.
+  </Card>
+  <Card title="Batched GraphQL fetching" icon="zap">
+    GitHub ingestion moved from many REST calls per PR to a single batched GraphQL query (file changes, reviews, assignees, commits in one trip). Bulk loading routes through Graphiti's `add_episode_bulk` for parallel extraction with deduping.
+  </Card>
+</CardGroup>
+
+## Primary entry points
+
+| Package / file | Responsibility |
+|---|---|
+| `relic-core/.../ontology/skill_ir.py` | The `SkillIR` ontology contract |
+| `relic-serve/.../serve/mcp_server.py` | MCP server (skills, search, recall) |
+| `relic-cli/.../cli.py` | CLI composition root (dependency injection) |
+| `relic-ingest/.../ingest/mappers.py` | Deterministic ingest & mapping |
+| `relic-graph/.../graph/recall.py` | Graph recall with cited provenance |

@@ -1,0 +1,66 @@
+---
+title: "Conventions"
+description: "Linear-driven branches and commits, the CLAUDE.md → AGENTS.md pattern, and the Next.js canary rule — carried identically across every repo."
+---
+
+Git and collaboration conventions are documented in a synced `AGENTS.md` carried identically across every repo in a venture. Linear is the spine.
+
+## Linear is the unit of work
+
+Issue tracking drives the workflow (team **Engineering**, initiative **GreekCore v2**). Every git artifact links back to an issue.
+
+<Steps>
+  <Step title="Start from a Linear issue">
+    Work begins as a Linear issue, not a branch.
+  </Step>
+  <Step title="Copy the generated branch name verbatim">
+    Branches use Linear's generated name exactly — e.g. `paris/eng-175-ios-app-store-submission-release`.
+  </Step>
+  <Step title="Commit in Conventional Commits">
+    `feat:` / `fix:` / `chore:` …, no emoji, written so they "read like a person dashed it off," with `[part of ENG-XX]` appended.
+  </Step>
+  <Step title="Open a walkthrough-style PR">
+    The PR body walks the reviewer through the change and includes `Part of ENG-XX` for auto-linking; reviews are right-sized.
+  </Step>
+</Steps>
+
+## Commit style
+
+<CardGroup cols={2}>
+  <Card title="Conventional Commits" icon="git-commit-vertical">
+    Typed prefixes (`feat`, `fix`, `chore`, …) with no emoji.
+  </Card>
+  <Card title="Human voice" icon="message-square">
+    Messages read like a person dashed them off — not machine-generated boilerplate.
+  </Card>
+  <Card title="Issue linkage" icon="link">
+    Append `[part of ENG-XX]` so commits trace back to Linear.
+  </Card>
+  <Card title="Right-sized PRs" icon="git-pull-request">
+    `Part of ENG-XX` in the body for auto-linking; review scope matched to the change.
+  </Card>
+</CardGroup>
+
+## The `CLAUDE.md` → `AGENTS.md` pattern
+
+A one-line `CLAUDE.md` imports the real `AGENTS.md`, which is the single source of truth — and agent-agnostic, so it serves Claude Code, Cursor, and any other agent.
+
+```md CLAUDE.md
+@AGENTS.md
+```
+
+<Note>
+  Writing the rules once in `AGENTS.md` means every agent reads the same instructions, and the file can be carried identically across all repos in a venture.
+</Note>
+
+## The Next.js canary rule
+
+Every Next.js repo carries a standard `nextjs-agent-rules` block, because these projects run bleeding-edge canary builds:
+
+<Warning>
+  **This is NOT the Next.js you know — read `node_modules/next/dist/docs/` first.** Assumptions from stable Next.js releases will be wrong against canary.
+</Warning>
+
+## A note on stale references
+
+The dossiers flag that `Relic/landing/AGENTS.md` references a sibling path from a collaborator's machine (`/Users/zidan/Desktop/relic-core`) that doesn't match this layout — a reminder that synced `AGENTS.md` files can carry machine-specific paths when copied between collaborators.

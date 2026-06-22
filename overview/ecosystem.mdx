@@ -1,0 +1,92 @@
+---
+title: "The ecosystem"
+description: "How the ventures, labs, and tooling fit together — a meticulously reproducible, agent-first development environment running multiple ventures plus personal work."
+---
+
+This knowledge base documents a single developer's working world: multiple ventures (**GreekCore**, **Relic**, **Mavri Studio**), a set of research and hackathon **labs**, and the **agent-first workflow** that ties them together.
+
+## The one-liner
+
+A meticulously reproducible, agent-first macOS development environment running multiple ventures plus personal work, built around Claude Code, a Linear-driven process, and a shared team-memory layer (Hyper).
+
+<CardGroup cols={2}>
+  <Card title="Infrastructure as config" icon="settings-2">
+    The whole machine — shell, editor, git, Claude Code — bootstraps from version-controlled dotfiles in one command.
+  </Card>
+  <Card title="Agent-first development" icon="bot">
+    Parallel git worktrees, variant forks for design exploration, and vendored, content-pinned agent skills.
+  </Card>
+  <Card title="Linear-centered process" icon="git-pull-request">
+    Linear is the unit of work; branches, Conventional Commits, and PRs all link back to issues.
+  </Card>
+  <Card title="Two-pole stack" icon="columns-2">
+    Next.js (App Router, canary) for every web surface; Python (pyproject) for every AI backend.
+  </Card>
+</CardGroup>
+
+## The two-pole stack
+
+Almost everything resolves to one of two technology poles. Knowing which pole a project sits on tells you most of what you need about its toolchain and conventions.
+
+| Pole | Used for | Representative projects |
+|---|---|---|
+| **Next.js** (App Router, canary) | All web and landing surfaces | `greekcore/web`, `greekcore/landing`, Relic landing, Mavri landing, `personal-site` |
+| **Python** (`pyproject`, `uv`) | AI backends and data pipelines | `relic-core`, `mavri/studio`, `agent-simulator` backend |
+
+<Note>
+  The Next.js repos run bleeding-edge **canary** builds. Each carries a standard `nextjs-agent-rules` block reminding agents: *"This is NOT the Next.js you know — read `node_modules/next/dist/docs/` first."*
+</Note>
+
+## The portfolio at a glance
+
+Work is organized into venture groupings, each holding one or more repositories.
+
+<CardGroup cols={3}>
+  <Card title="GreekCore" icon="building-2" href="/ventures/greekcore">
+    Multi-tenant SaaS for Greek-life organizations. The primary daily driver, spanning a workspace orchestrator and `api` / `web` / `mobile` / `infra` / `docs` child repos.
+  </Card>
+  <Card title="Relic" icon="brain" href="/ventures/relic">
+    An AI-native team-memory layer that turns engineering history into a temporal knowledge graph and serves it to coding agents over MCP.
+  </Card>
+  <Card title="Mavri Studio" icon="palette" href="/ventures/mavri">
+    A backend that turns brand source material into a versioned Brand Kit and generates on-brand copy and imagery from it.
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Labs" icon="flask-conical" href="/labs">
+    The agent-simulator and a run of hackathon and course projects — including a HooHacks first-place winner.
+  </Card>
+  <Card title="Personal & tooling" icon="user" href="/overview/repositories">
+    `personal-site`, `dotfiles`, `LaTeX-Resume`, and the configuration that reproduces the whole environment.
+  </Card>
+</CardGroup>
+
+## How a venture is structured
+
+The most sophisticated ventures share a common shape, modeled most fully by GreekCore v2:
+
+<Steps>
+  <Step title="A workspace orchestrator">
+    A parent repo owns only cross-cutting tooling. A single front door (`mise.toml`) pins the toolchain and defines every dev task.
+  </Step>
+  <Step title="Independent child repos">
+    A `repos.manifest` clones the real repos (`api`, `web`, `infra`, `docs`) — gitignored, not submodules. The workspace stays thin.
+  </Step>
+  <Step title="One-command local stack">
+    `mise run setup` clones, installs, and fans out secrets; `mise run dev` boots Postgres, migrations, seeds, and every app process under `process-compose`.
+  </Step>
+  <Step title="Agent-agnostic rules">
+    A one-line `CLAUDE.md` imports a shared `AGENTS.md` — a single source of truth carried identically across every repo in the venture.
+  </Step>
+</Steps>
+
+See [Engineering](/engineering) for the full breakdown of the workstation, Claude Code configuration, conventions, and the workspace pattern.
+
+## Who builds this
+
+**Paris Phan** — sole developer and founder across these projects (with collaborators on Relic). Apple Silicon M4 Mac Mini, `fish` shell, Claude Code as the primary development interface.
+
+<Card title="Browse the repository directory" icon="folder-git-2" href="/overview/repositories">
+  See every repository across the GreekCore, Relic, Mavri, and personal accounts.
+</Card>

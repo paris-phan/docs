@@ -1,0 +1,123 @@
+---
+title: "agent-simulator"
+description: "A satellite-imagery-driven environment simulator that orchestrates LLM agents over MCP to generate realistic airport operational scenarios from real-world OSM data and satellite quality predictions."
+---
+
+A satellite-imagery-driven environment simulator that orchestrates LLM agents via the Model Context Protocol (MCP) to generate realistic airport operational scenarios — using real-world OpenStreetMap (OSM) data and satellite-quality predictions.
+
+<CardGroup cols={2}>
+  <Card title="Context" icon="satellite-dish">
+    A research/R&D simulator for validating satellite visual observations and simulating multi-agent airport operations.
+  </Card>
+  <Card title="Role" icon="user">
+    Creator & lead system architect — system design, directory structure, and core integrations, with a small team.
+  </Card>
+</CardGroup>
+
+## Tech stack
+
+- **Backend:** FastAPI (async Python 3.11), SQLite (aiosqlite + SQLAlchemy async)
+- **Frontend:** Next.js 15 (React 18, TypeScript 5, App Router)
+- **Graph & pathfinding:** NetworkX
+- **Agents:** Model Context Protocol via FastMCP; LangGraph + LangChain
+- **Visualization:** Mapbox GL JS + Three.js (custom GLSL shaders)
+- **Orbital & solar math:** `pvlib`, `skyfield`, `sgp4`
+
+## Engineering deep dives
+
+### 1. Dual-loop agent workflows via LangGraph
+
+Automates layout discovery and flight execution by looping until complete, letting specialized models share conversation state.
+
+- The **initialization graph** fetches runways, taxiways, and gate properties through MCP tools, looping until no further tools are called.
+- The **simulation timestep graph** commands plane operations on scheduling rules, queries final positions, and feeds environmental statistics to a high-reasoning model (e.g. `o3-mini`) that generates visual satellite observation reports.
+
+<Note>
+  **Reference:** `backend/llm_pipeline/surveillance.py` — the `AirportSimulationService` orchestrator binding layout and movement tools to their specialized agents.
+</Note>
+
+### 2. Custom WebGL 3D aircraft layer with Fresnel shaders
+
+Renders 3D aircraft (Boeing 737, Airbus A330/A380, F18, F22, Tie Fighter, X-Wing) directly on Mapbox GL JS with a night-preset style and a glowing red effect.
+
+It subclasses `mapboxgl.CustomLayerInterface` inside a React client component, maps coordinates into Mercator space, manages a `THREE.WebGLRenderer` over the Mapbox canvas, and compiles custom shaders implementing a fresnel glow factor:
+
+$$\text{fresnel} = (1.0 - |\vec{N} \cdot \vec{V}|)^2$$
+
+<Note>
+  **Reference:** `frontend/src/components/simulation/MapVisualization.tsx` — model loading, GLSL shader compilation, and entity coordinate calculations.
+</Note>
+
+### 3. Scenario-isolated SQLite, three tables per scenario
+
+Provides strict isolation between simulation scenarios while staying on a lightweight, file-based SQLite database.
+
+A dynamic database manager creates per-scenario tables at runtime — `scenario_{uuid}_osm_features`, `scenario_{uuid}_entities`, and `scenario_{uuid}_schedule` — alongside a global `scenario_metadata` table.
+
+<Note>
+  **Reference:** `backend/database/manager_v2.py` — dynamically creates and drops scenario-specific SQLite tables via SQLAlchemy factories.
+</Note>
+
+### 4. Satellite environmental quality evaluator
+
+Determines whether a satellite pass over an airport would yield clear imagery, based on weather, solar coordinates, and cloud cover.
+
+It models satellite passes from TLE data with `skyfield` and `sgp4`, evaluates the solar elevation angle (computing a 1 m pole's shadow length), integrates cloud fractions, and combines them into a weighted score:
+
+| Factor | Weight |
+|---|---|
+| Solar | 35% |
+| Cloud | 40% |
+| Weather | 25% |
+
+<Note>
+  **Reference:** `backend/imaging_assessment/env_assessment.py` — scoring logic and optimal-window identification.
+</Note>
+
+### 5. Node snapping & Haversine collision avoidance
+
+Snaps moving planes onto taxiway networks and prevents physical overlaps.
+
+The `move_aircraft` MCP tool queries the airport's NetworkX graph: within 10 m of a graph node, it snaps the aircraft to the node; otherwise it leaves it on a free coordinate and computes bearing from the last point. It computes the Haversine distance to other active aircraft and **rejects moves below a 35 m minimum safe threshold**.
+
+<Note>
+  **Reference:** `backend/mcp_toolkit/tools/airport_controller_tools.py` — snapping, bearing, and collision warnings.
+</Note>
+
+## The hardest problem
+
+**Blending the Mapbox GL JS render loop with the Three.js WebGL context inside React.** Without careful cleanup, canvas initialization leaks resources or drops frames. The fix: pre-calculate translation matrices relative to a fixed airport-origin node and update active sprite coordinates synchronously during the `render` pass of Mapbox's frame ticks.
+
+## Metrics
+
+<CardGroup cols={2}>
+  <Card title="Fast startup" icon="timer">
+    Simulation startup capped under 5 seconds.
+  </Card>
+  <Card title="Smooth cadence" icon="activity">
+    Ticks run at a cadence of at least 2 Hz.
+  </Card>
+  <Card title="Scales out" icon="layers">
+    Supports up to 100 concurrent simulation environments.
+  </Card>
+  <Card title="Instant local assessment" icon="zap">
+    Zero-dependency environmental assessment runs instantly without satellite-catalog lookups.
+  </Card>
+</CardGroup>
+
+## Run it locally
+
+<CodeGroup>
+```bash Docker (recommended)
+make setup  # Creates env files and configurations
+make dev    # Spins up frontend and backend services
+```
+
+```bash Manual
+# Backend
+cd backend && python main.py
+
+# Frontend
+cd frontend && npm run dev
+```
+</CodeGroup>

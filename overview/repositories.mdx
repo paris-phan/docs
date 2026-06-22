@@ -1,0 +1,74 @@
+---
+title: "Repository directory"
+description: "Every repository across the GreekCore, Relic (buildrelic), Mavri Studio, and personal accounts."
+---
+
+A directory of repositories across the organizations and the personal account. Private repos are marked; links resolve only for accounts with access.
+
+<Note>
+  This directory was assembled from GitHub organization listings and the project dossiers. Visibility (public/private) reflects each repo's status at the time of writing.
+</Note>
+
+## GreekCore
+
+The platform is split across a workspace orchestrator and independent child repositories. See [Ventures → GreekCore](/ventures/greekcore) for architecture.
+
+| Repository | Purpose | Language | Visibility |
+|---|---|---|---|
+| [`GreekCore/workspace`](https://github.com/GreekCore/workspace) | Parent workspace housing child repos for full-platform development | Shell | Private |
+| [`GreekCore/GreekCore`](https://github.com/GreekCore/GreekCore) | Source monorepo for GreekCore | TypeScript | Private |
+| [`GreekCore/api`](https://github.com/GreekCore/api) | NestJS + Fastify backend and the shared `@greekcore/db` package | TypeScript | Private |
+| [`GreekCore/web`](https://github.com/GreekCore/web) | `member-web` and `admin-web` React SPAs | TypeScript | Private |
+| [`GreekCore/mobile`](https://github.com/GreekCore/mobile) | Mobile client | — | Private |
+| [`GreekCore/infra`](https://github.com/GreekCore/infra) | OpenTofu IaC for dev / staging / prod | HCL | Private |
+| [`GreekCore/docs`](https://github.com/GreekCore/docs) | Developer guides and schema documentation | MDX | Private |
+| [`GreekCore/document-templates`](https://github.com/GreekCore/document-templates) | Templates for major documents and artefacts | — | Private |
+| [`GreekCore/mintlify-docs`](https://github.com/GreekCore/mintlify-docs) | Mintlify docs surface | MDX | Public |
+
+## Relic (buildrelic)
+
+An AI-native team-memory product. See [Ventures → Relic](/ventures/relic) for architecture.
+
+| Repository | Purpose | Language | Visibility |
+|---|---|---|---|
+| [`buildrelic/relic-core`](https://github.com/buildrelic/relic-core) | `uv` workspace: capture/ingest, graph memory, skill registry, and MCP serving | Python | Private |
+| [`buildrelic/landing`](https://github.com/buildrelic/landing) | Marketing site | Next.js | Private |
+| [`buildrelic/.github`](https://github.com/buildrelic/.github) | Organization profile and shared defaults | — | Public |
+
+<Note>
+  `relic-core` is a `uv` workspace containing the `relic-core`, `relic-ingest`, `relic-graph`, `relic-serve`, and `relic-cli` packages. See the [Relic architecture](/ventures/relic/architecture) page for how they compose.
+</Note>
+
+## Mavri Studio
+
+A brand-genome backend and console. See [Ventures → Mavri Studio](/ventures/mavri) for architecture.
+
+| Repository | Purpose | Language | Visibility |
+|---|---|---|---|
+| `mavri/studio` | FastAPI backend: brand ingestion, versioned Brand Kit, copy + image generation | Python | Private |
+| `mavri/landing` | Marketing site | Next.js | Private |
+
+## Personal & tooling
+
+The personal account holds tooling, the personal site, and a run of hackathon and course projects (see [Labs](/labs)).
+
+| Repository | Purpose | Language |
+|---|---|---|
+| [`paris-phan/docs`](https://github.com/paris-phan/docs) | This knowledge base (Mintlify) | MDX |
+| [`paris-phan/dotfiles`](https://github.com/paris-phan/dotfiles) | One-command macOS environment bootstrap | Shell |
+| [`paris-phan/and-e`](https://github.com/paris-phan/and-e) | HooHacks 2025 first-place winner | C |
+| [`paris-phan/hoohacks-2026`](https://github.com/paris-phan/hoohacks-2026) | HooHacks 2026 project | Python |
+| [`paris-phan/canvasGPT`](https://github.com/paris-phan/canvasGPT) | UVA CS 4774 final project | TypeScript |
+| [`paris-phan/interview-extractor`](https://github.com/paris-phan/interview-extractor) | HooYouKnow project | Python |
+| [`paris-phan/robosense-2025-track1`](https://github.com/paris-phan/robosense-2025-track1) | RoboSense 2025, Track 1 | Python |
+| [`paris-phan/jefferson-labs`](https://github.com/paris-phan/jefferson-labs) | Jefferson Labs | TypeScript |
+| [`paris-phan/sys-3060-final-project`](https://github.com/paris-phan/sys-3060-final-project) | SYS 3060 final project | Jupyter Notebook |
+| [`paris-phan/course-scheduler`](https://github.com/paris-phan/course-scheduler) | Course scheduling tool | Python |
+| [`paris-phan/hootel`](https://github.com/paris-phan/hootel) | CS 3240 web design project | JavaScript |
+| [`paris-phan/myPantry`](https://github.com/paris-phan/myPantry) | HooHacks 2024 submission (archived) | Swift |
+| [`paris-phan/Essentials`](https://github.com/paris-phan/Essentials) | TJHack 9.0 (archived) | Swift |
+| [`paris-phan/wics-2024`](https://github.com/paris-phan/wics-2024) | WiCS 2024 (archived) | Python |
+
+<Info>
+  The project dossiers also reference `personal-site` (Next.js, `redesign` branch) and `LaTeX-Resume`, which are not part of the public personal account listing. They are documented in [Labs](/labs/projects) for completeness.
+</Info>

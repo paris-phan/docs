@@ -1,0 +1,69 @@
+---
+title: "Mavri Studio"
+description: "A backend that turns brand source material into a versioned, schema-valid Brand Kit, then generates on-brand copy and imagery from it — driven by a browser-based console."
+---
+
+Mavri Studio turns brand source material — guideline PDFs, asset images, and/or website URLs — into a versioned, schema-valid **Brand Kit**, then generates on-brand copy and images from it. The whole thing is driven by a browser-based console.
+
+<CardGroup cols={2}>
+  <Card title="Audience" icon="users">
+    A client SaaS platform or internal tool for automated, on-brand content and visual marketing assets.
+  </Card>
+  <Card title="Role" icon="user">
+    Sole developer.
+  </Card>
+</CardGroup>
+
+## Tech stack
+
+- **Language:** Python 3.12
+- **API:** FastAPI
+- **Data:** SQLAlchemy 2.0 + Alembic, PostgreSQL (with JSONB)
+- **Schema & config:** Pydantic v2
+- **Imaging:** Pillow
+- **Model providers:** Anthropic Claude SDK and OpenAI SDK
+
+## Architecture highlights
+
+<CardGroup cols={2}>
+  <Card title="Inward-pointing dependencies" icon="target">
+    A pure core domain model with zero I/O. Infrastructure (LLM, image, embedding adapters) sits behind structural Python `Protocol` interfaces. Vendor SDKs are lazily imported so CI never loads heavy dependencies.
+  </Card>
+  <Card title="Human-in-the-loop activation gate" icon="user-check">
+    Ingestion produces a `draft` kit. Edits never mutate in place — they create a new snapshot. A review gate requires manual activation before downstream services can use a kit.
+  </Card>
+  <Card title="Budget-aware cost ledger" icon="wallet">
+    Granular cost persistence sums and enforces brand-level and generation-level spend caps *before* invoking expensive AI endpoints.
+  </Card>
+  <Card title="Exactly one active version" icon="check-check">
+    A partial unique index guarantees a single active Brand Kit per brand at the database level.
+  </Card>
+</CardGroup>
+
+## Key primitives
+
+<AccordionGroup>
+  <Accordion title="Pillow" icon="image">
+    Drives deterministic logo and type compositing over generated layouts, ensuring exact brand palette and trademark integrity.
+  </Accordion>
+  <Accordion title="SQLAlchemy & JSONB" icon="database">
+    Stores high-dimensional embeddings as plain JSONB float arrays and computes cosine similarity natively in Python — no local `pgvector` dependency.
+  </Accordion>
+  <Accordion title="Pydantic v2" icon="file-code">
+    The central data contract. Structured schemas for LLM extraction and generation outputs are derived directly from Pydantic field definitions and docstrings.
+  </Accordion>
+</AccordionGroup>
+
+## Local commands
+
+The project is driven by `just`:
+
+| Command | What it does |
+|---|---|
+| `just setup` | Pull Docker containers, install dependencies via `uv`, run Alembic migrations |
+| `just dev` | Boot the FastAPI app server and the database browser |
+| `just test` | Run the 26-test offline suite using mock providers |
+
+<Card title="Read the architecture deep dive" icon="layers" href="/ventures/mavri/architecture">
+  The versioned Brand Kit lifecycle, deterministic Pillow compositing, the critique-and-repair loop, and local vector indexing without pgvector.
+</Card>

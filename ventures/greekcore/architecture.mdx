@@ -1,0 +1,114 @@
+---
+title: "GreekCore architecture"
+description: "Multi-tenant row-level security, the owner-bypassing bootstrap path, Stream Chat synchronization, and cross-cutting dev orchestration."
+---
+
+The deep technical decisions behind GreekCore v2 — how tenant isolation is enforced at the database level, how users are provisioned before a tenant context exists, how chat stays in sync, and how the whole local stack boots from one command.
+
+## 1. Multi-tenant RLS & the two-role Postgres split
+
+Tenant isolation is enforced directly inside Postgres, so user chapters cannot leak data to other organizations under any circumstance.
+
+The Neon database is split into two connection roles:
+
+<CardGroup cols={2}>
+  <Card title="Owner role" icon="shield-off">
+    `DATABASE_URL_DIRECT` — bypasses RLS. Restricted to schema migrations, dev seeds, and specific auth bootstrap routines.
+  </Card>
+  <Card title="Runtime role" icon="shield-check">
+    `DATABASE_URL` — RLS enabled globally on every tenant-scoped table.
+  </Card>
+</CardGroup>
+
+Every query under the runtime role runs inside a transaction opened by a `withChapter` or `withIdentity` wrapper. These wrappers set transaction-local GUC (Grand Unified Configuration) variables using `set_config(..., true)`:
+
+- `app.user_id`
+- `app.chapter_id`
+- `app.is_staff`
+- `app.guest_link_id`
+
+Because the third argument to `set_config` is `true` (the `LOCAL` scope), the values are discarded the moment the transaction commits or rolls back — preventing session contamination under Neon's PgBouncer transaction pooling. RLS policies read these settings through stable SQL functions (`current_chapter_id()`, `current_user_id()`) to run join-free filters.
+
+<Note>
+  **Reference:** `api/packages/db/src/context.ts` wraps the GUC transaction scoping; `api/packages/db/src/schema/identity.ts` defines the tenant-scoped tables referencing `chapters.id`.
+</Note>
+
+## 2. Owner-bypassing bootstrap path & advisory locking
+
+Some actions must run *before* a tenant context exists: just-in-time user provisioning from Clerk, active-membership assertion, and invite-code redemption.
+
+<Steps>
+  <Step title="JIT user provisioning">
+    On a user's first request, `resolveUser` provisions or reconciles their local record from Clerk's profile under the RLS-bypassing owner connection.
+  </Step>
+  <Step title="Serialized invite redemption">
+    Redeeming an invite code must be serialized to avoid double-redemptions and races where multiple users claim to be the chapter "founder" (the first active member, who automatically receives the `exec` role).
+  </Step>
+  <Step title="Row lock + advisory lock">
+    The routine locks the `invite_codes` row with `FOR UPDATE` and takes a transaction-scoped advisory lock: `pg_advisory_xact_lock(hashtext(chapter_id), hashtext('chapter_founder'))`.
+  </Step>
+  <Step title="Single super-admin guarantee">
+    It then performs a member count and inserts the new member, ensuring exactly one super admin is established per chapter.
+  </Step>
+</Steps>
+
+<Note>
+  **Reference:** `redeemInviteCode` in `api/packages/db/src/identity.ts`.
+</Note>
+
+## 3. Stream Chat synchronization & the memory-lock queue
+
+The platform auto-provisions two Stream channels per chapter — `chapter-<id>` and `chapter-<id>-exec` — and keeps memberships and officer roles in sync.
+
+The `ChatSyncService` watches membership transitions (joins, role changes, deactivations) and reconciles them against the Stream API. To prevent races — for example, a chat-open action that verifies an `exec` role racing against an active demotion hook and accidentally re-adding a demoted user to the exec channel — reconciliations are **serialized per user/chapter** using an in-memory Promise-chain queue (`locks.get(key)`).
+
+<Warning>
+  If a Stream connection fails, the service logs a warning but still lets the database transaction commit — a best-effort, decoupled design that never blocks the core write path.
+</Warning>
+
+<Note>
+  **Reference:** `api/apps/api/src/communications/chat-sync.service.ts`.
+</Note>
+
+## 4. Cross-cutting dev tooling & process composition
+
+The workspace root unifies setup and local execution of the independent child repos under one configuration.
+
+`mise` manages pinned SDK runtimes (Node, pnpm, OpenTofu, Docker, Fastify) and orchestrates tasks:
+
+<CodeGroup>
+```bash Setup
+# Reads repos.manifest, clones missing repos, installs node packages,
+# and fans out secrets from .env.workspace to child .env files.
+mise run setup
+```
+
+```bash Dev
+# Boots the Postgres container and native app processes via process-compose.
+mise run dev
+```
+</CodeGroup>
+
+A DAG enforces ordering: the local database container is health-checked, migrations and seeds run, packages (`@greekcore/db`, `@greekcore/ui`, `@greekcore/auth-web`) compile in order, and then the API and both web apps launch simultaneously.
+
+<Note>
+  **Reference:** `mise.toml` maps the front-door tasks; `process-compose.yaml` controls service dependencies.
+</Note>
+
+## The hardest problem
+
+**Correct tenant context under PgBouncer transaction pooling.** Because physical connections are shared across HTTP requests, session-level variables (`SET app.chapter_id = ...`) could leak between tenants.
+
+The fix has two parts:
+
+1. **`LOCAL` GUC scopes** restrict each variable's lifespan to its own transaction block.
+2. **Disabling prepared statements** (`prepare: false` on the Postgres client) prevents prepared-query variables from bleeding into other pooled sessions.
+
+## Primary entry points
+
+| File | Responsibility |
+|---|---|
+| `api/packages/db/src/context.ts` | Transaction GUC helpers enforcing RLS |
+| `api/packages/db/src/identity.ts` | Privileged JIT user reconciliation and invite redemption |
+| `api/apps/api/src/communications/chat-sync.service.ts` | Real-time chat synchronization |
+| `mise.toml` · `process-compose.yaml` | Multi-process dev orchestration graph |

@@ -1,8 +1,8 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "sequoia",
-  "name": "Knowledge base",
-  "description": "Onboarding, employee handbook, HR guides, IT help, company policies, and department runbooks.",
+  "name": "Paris Phan",
+  "description": "Engineering knowledge base for Paris Phan — the ventures (GreekCore, Relic, Mavri Studio), labs, and the agent-first workflow behind them.",
   "colors": {
     "primary": "#166E3F",
     "light": "#26BD6C",
@@ -21,100 +21,74 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Onboarding",
+        "tab": "Overview",
         "groups": [
           {
-            "group": "Welcome",
-            "pages": ["index"]
-          },
-          {
-            "group": "Your first days",
+            "group": "Start here",
             "pages": [
-              "onboarding/first-day",
-              "onboarding/first-week",
-              "onboarding/meet-the-team"
+              "index",
+              "overview/ecosystem"
             ]
           },
           {
-            "group": "Tools & access",
+            "group": "Directory",
             "pages": [
-              "onboarding/tools/laptop-setup",
-              "onboarding/tools/account-access",
-              "onboarding/tools/vpn-setup"
+              "overview/repositories"
             ]
           }
         ]
       },
       {
-        "tab": "HR & People",
+        "tab": "Ventures",
         "groups": [
           {
-            "group": "Overview",
-            "pages": ["hr-people/index"]
-          },
-          {
-            "group": "Benefits & time off",
+            "group": "Ventures",
             "pages": [
-              "hr-people/benefits",
-              "hr-people/time-off"
+              "ventures/index"
             ]
           },
           {
-            "group": "Growth & pay",
+            "group": "GreekCore",
             "pages": [
-              "hr-people/performance-reviews",
-              "hr-people/compensation/index",
-              "hr-people/compensation/salary-bands",
-              "hr-people/compensation/equity-overview"
+              "ventures/greekcore/index",
+              "ventures/greekcore/architecture"
+            ]
+          },
+          {
+            "group": "Relic",
+            "pages": [
+              "ventures/relic/index",
+              "ventures/relic/architecture"
+            ]
+          },
+          {
+            "group": "Mavri Studio",
+            "pages": [
+              "ventures/mavri/index",
+              "ventures/mavri/architecture"
             ]
           }
         ]
       },
       {
-        "tab": "IT & Security",
+        "tab": "Labs",
         "groups": [
           {
             "group": "Overview",
-            "pages": ["it-security/index"]
-          },
-          {
-            "group": "Access & devices",
             "pages": [
-              "it-security/access-requests",
-              "it-security/device-policy"
+              "labs/index"
             ]
           },
           {
-            "group": "Security training",
+            "group": "Deep dives",
             "pages": [
-              "it-security/security-training/index",
-              "it-security/security-training/phishing",
-              "it-security/security-training/data-handling"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Policies",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": ["policies/index"]
-          },
-          {
-            "group": "Conduct & spend",
-            "pages": [
-              "policies/code-of-conduct",
-              "policies/expense-reimbursement",
-              "policies/travel-policy"
+              "labs/agent-simulator"
             ]
           },
           {
-            "group": "Remote work",
+            "group": "Index",
             "pages": [
-              "policies/remote-work/index",
-              "policies/remote-work/home-office-setup",
-              "policies/remote-work/time-zones"
+              "labs/projects"
             ]
           }
         ]
@@ -124,29 +98,22 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": ["engineering/index"]
-          },
-          {
-            "group": "Setup & deployment",
             "pages": [
-              "engineering/dev-setup",
-              "engineering/deployment"
+              "engineering/index"
             ]
           },
           {
-            "group": "Incident response",
+            "group": "Workstation",
             "pages": [
-              "engineering/incident-response/index",
-              "engineering/incident-response/on-call",
-              "engineering/incident-response/postmortem"
+              "engineering/environment",
+              "engineering/claude-code"
             ]
           },
           {
-            "group": "Architecture",
+            "group": "Process",
             "pages": [
-              "engineering/architecture/index",
-              "engineering/architecture/services-overview",
-              "engineering/architecture/data-models"
+              "engineering/conventions",
+              "engineering/workspace"
             ]
           }
         ]
@@ -160,20 +127,20 @@
   "navbar": {
     "links": [
       {
-        "label": "Submit IT ticket",
-        "href": "/it-security/access-requests"
+        "label": "GitHub",
+        "href": "https://github.com/paris-phan"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Employee portal",
-      "href": "https://dashboard.mintlify.com"
+      "label": "parisphan.com",
+      "href": "https://parisphan.com"
     }
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/yourcompany",
-      "linkedin": "https://linkedin.com/company/yourcompany"
+      "github": "https://github.com/paris-phan",
+      "website": "https://parisphan.com"
     }
   }
 }

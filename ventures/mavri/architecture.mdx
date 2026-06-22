@@ -1,0 +1,97 @@
+---
+title: "Mavri Studio architecture"
+description: "The immutable Brand Kit lifecycle, deterministic Pillow compositing, the closed-loop critique-and-repair system, and local vector indexing without pgvector."
+---
+
+How Mavri keeps generated content on-brand and on-budget — versioning kits immutably, compositing real assets over generated imagery, auto-repairing weak output, and grounding generations in retrieved exemplars.
+
+## 1. Immutable & versioned Brand Kit lifecycle
+
+Mavri ingests brand materials, runs structured extraction via forced LLM tool calls, and version-controls the resulting Brand Kit.
+
+<Steps>
+  <Step title="Normalize inputs">
+    Multi-source inputs (files and URLs) are normalized into a single ingestion stream.
+  </Step>
+  <Step title="Structured extraction">
+    Extraction runs via Anthropic Claude or OpenAI models; the result is stored as a `draft` version.
+  </Step>
+  <Step title="Human activation">
+    On activation, a partial database index (`uq_brandkit_one_active` where `status = 'active'`) guarantees any existing active kit is archived first.
+  </Step>
+</Steps>
+
+<Note>
+  **Reference:** `src/mavri/domain/versioning.py` defines the kit lifecycle and the single-active guard.
+</Note>
+
+## 2. Deterministic image compositing (Pillow)
+
+Diffusion models render exact text and logos poorly. Mavri sidesteps this by splitting image generation into two stages:
+
+<CardGroup cols={2}>
+  <Card title="Generate clean backgrounds" icon="image">
+    The generation prompt requests clean compositions with defined negative space in the lower-left and bottom — no model-rendered text or logos.
+  </Card>
+  <Card title="Composite real assets" icon="layers">
+    Pillow overlays a translucent, brand-tinted plate, scales the brand's real logo, wraps text, and renders the headline and CTA.
+  </Card>
+</CardGroup>
+
+The uncomposited base image is stored separately, so the image-to-image exemplar flywheel can reuse it without feedback loops.
+
+<Note>
+  **Reference:** `src/mavri/services/generation/compositor.py` handles coordinates, text wrapping, dynamic scaling, and color contrast.
+</Note>
+
+## 3. Closed-loop critique & repair
+
+Low-quality or non-compliant generations are auto-revised before they're ever returned.
+
+<Tabs>
+  <Tab title="Copy repair">
+    Output is checked against the brand's `banned_words` using word-boundary regexes. On a violation, a correction instruction is appended and the copy is regenerated, up to a set limit.
+  </Tab>
+  <Tab title="Image critique">
+    A vision model scores each variant from 0–1 across five criteria — overall, brand fit, palette, composition, legibility. Weak variants are automatically revised using art-director feedback from the model.
+  </Tab>
+</Tabs>
+
+<Note>
+  **Reference:** `src/mavri/services/generation/copy_generator.py` (regex checks and repair loop); `src/mavri/services/generation/critic.py` (vision scoring).
+</Note>
+
+## 4. Local vector indexing without pgvector
+
+Mavri embeds and retrieves segments of the active brand kit and approved prior exemplars for context grounding — without a database extension.
+
+Chunks are extracted from the active kit and their embeddings inserted as **raw JSON float lists**. Retrieval loads those rows for the active brand and computes cosine similarity in Python with basic `math` operations — efficient for the small document count and free of a `pgvector` install.
+
+<Note>
+  **Reference:** `src/mavri/services/ingestion/indexer.py` handles chunking, dedup via SHA-256 content hashes, and cosine similarity.
+</Note>
+
+## The hardest problem
+
+**Preventing logo and text collisions in AI-generated imagery.** The two-part rendering pipeline solves it: the diffusion model is prompted to reserve negative space in specific zones (lower-left and bottom), then a deterministic, code-driven Pillow compositor overlays the real assets in non-overlapping layout grids. A zero-temperature vision critic verifies the composition constraints were met.
+
+## Performance & DX
+
+<CardGroup cols={2}>
+  <Card title="AST-enforced decoupling" icon="git-compare">
+    AST-parsing test guards (`test_architecture.py`) verify that no core service file imports a vendor SDK directly, preserving clean architectural separation.
+  </Card>
+  <Card title="Transaction-safe budget caps" icon="shield-alert">
+    Adapter spend is calculated and logged on every API call; a budget-breach exception is thrown *before* invoking downstream generation if caps are exceeded.
+  </Card>
+</CardGroup>
+
+## Primary entry points
+
+| File | Responsibility |
+|---|---|
+| `src/mavri/domain/brand_kit.py` | Domain contract |
+| `src/mavri/services/ingestion/orchestrator.py` | Ingestion pipeline |
+| `src/mavri/services/generation/orchestrator.py` | Generation pipeline |
+| `src/mavri/services/generation/compositor.py` | Pillow compositing layer |
+| `tests/test_architecture.py` | AST lint / architecture tests |

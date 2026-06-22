@@ -1,26 +1,49 @@
 ---
 title: "Engineering"
-description: "Development setup, deployment processes, incident response, and architecture documentation."
+description: "The agent-first, Linear-driven, infrastructure-as-config development workflow behind every venture and lab."
 ---
 
-This section covers the technical foundations of how we build and operate our systems.
+This section documents *how the work gets done* — the machine, the agentic tooling, the conventions, and the workspace pattern shared across every [venture](/ventures) and [lab](/labs).
 
-## Get started
-
-<Card title="Developer setup" icon="terminal" href="/engineering/dev-setup">
-  Get your local environment running from a fresh machine.
-</Card>
-
-## Reference
+## Defining traits
 
 <CardGroup cols={2}>
-  <Card title="Deployment" icon="rocket" href="/engineering/deployment">
-    How code goes from a merged PR to production.
+  <Card title="Infrastructure as config" icon="settings-2" href="/engineering/environment">
+    The whole machine bootstraps from version-controlled dotfiles — one command on a clean Mac.
   </Card>
-  <Card title="Incident response" icon="siren" href="/engineering/incident-response">
-    On-call expectations, escalation paths, and postmortem process.
+  <Card title="Agent-first development" icon="bot" href="/engineering/claude-code">
+    Claude Code is the primary interface: parallel worktrees, variant forks, and vendored, pinned skills.
   </Card>
-  <Card title="Architecture" icon="layers" href="/engineering/architecture">
-    Services overview and data models.
+  <Card title="Linear-centered process" icon="git-pull-request" href="/engineering/conventions">
+    Linear is the unit of work; branches, commits, and PRs all link back to issues.
+  </Card>
+  <Card title="Two-pole stack" icon="columns-2" href="/overview/ecosystem">
+    Next.js (canary) for every web surface; Python (`pyproject`) for every AI backend.
+  </Card>
+</CardGroup>
+
+## Identity & accounts
+
+| Thing | Detail |
+|---|---|
+| **Machine** | Apple Silicon M4 Mac Mini (Darwin 25.5.0), `fish` login shell |
+| **Git identity** | `Paris Phan` · privacy-protecting `noreply` address · `git-lfs` configured globally |
+| **GitHub** | `gh` authed as **paris-phan** — orgs: `paris-phan`, `GreekCore`, `Mavri-Studio`, `buildrelic` |
+| **Claude** | Native install, Claude Code v2.1.x; Hyper team-memory integrated via session hooks |
+
+## In this section
+
+<CardGroup cols={2}>
+  <Card title="Workstation" icon="laptop" href="/engineering/environment">
+    Machine, shell, and the dotfiles that reproduce it all.
+  </Card>
+  <Card title="Claude Code" icon="terminal" href="/engineering/claude-code">
+    Settings, Hyper hooks, MCP servers, skills, and how agents are actually used.
+  </Card>
+  <Card title="Conventions" icon="git-merge" href="/engineering/conventions">
+    Linear-driven branches and commits, the `AGENTS.md` pattern, and the Next.js canary rule.
+  </Card>
+  <Card title="Workspace orchestration" icon="boxes" href="/engineering/workspace">
+    The `mise` + `process-compose` + `repos.manifest` pattern for multi-repo ventures.
   </Card>
 </CardGroup>

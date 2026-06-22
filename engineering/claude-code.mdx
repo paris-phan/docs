@@ -1,0 +1,69 @@
+---
+title: "Claude Code"
+description: "How Claude Code is configured and actually used — Hyper session hooks, MCP servers, skills, parallel worktrees, and variant forks."
+---
+
+Claude Code is the primary development interface across every project. This page documents the global configuration and the working patterns that have emerged from roughly 290 sessions across 47 projects.
+
+## Global configuration
+
+The global `~/.claude/settings.json` keeps the base minimal and pushes specifics down to projects.
+
+- **Theme** `dark`; workflow-usage warnings skipped.
+- **Enabled plugins:** `figma` and `linear` (from `anthropics/claude-plugins-official`) plus `hyper`.
+
+## Hyper session hooks
+
+The most distinctive piece: [Hyper](https://heyhyper.ai) — a shared team-memory layer — is wired into the Claude Code session lifecycle so context flows in at the start of a session and observations flow back out at the end.
+
+| Lifecycle event | Hook | Effect |
+|---|---|---|
+| `SessionStart` | `hyper-hook brief` | Pulls team memory / briefing into context |
+| `UserPromptSubmit` | `hyper-hook prompt` | Enriches each prompt |
+| `Stop` | `hyper-hook observe` | Writes observations back to memory |
+
+Permissions pre-allow all `mcp__hyper__*` tools and the Hyper token scripts.
+
+<Note>
+  Hyper (HTTP, `api.heyhyper.ai`) is the only persistent global MCP server. It is the primary cross-agent memory layer.
+</Note>
+
+## MCP servers
+
+<CardGroup cols={2}>
+  <Card title="Persistent" icon="infinity">
+    `hyper` — always on, for team memory.
+  </Card>
+  <Card title="On-demand" icon="plug-zap">
+    Notion, Gmail, Google Drive / Calendar, Linear, Vercel, Figma, Chrome control, computer-use, and PowerPoint — loaded via plugins and connectors as needed.
+  </Card>
+</CardGroup>
+
+## Skills
+
+Global skills are intentionally minimal (`correct`, `mute`, `find-skills` — all Hyper-related). **Real skill usage is project-scoped** — see the GreekCore [workspace pattern](/engineering/workspace) for how third-party skills are vendored and content-pinned like dependencies.
+
+<Note>
+  No custom global subagents or slash commands — the setup relies on built-ins (`Explore`, `Plan`, `general-purpose`) plus plugin-provided ones.
+</Note>
+
+## How Claude Code is actually used
+
+<CardGroup cols={2}>
+  <Card title="Parallel worktrees" icon="git-branch">
+    Git worktrees let multiple agents and experiments run without colliding — common across `personal-site`, `relic-core`, and the GreekCore landing.
+  </Card>
+  <Card title="Variant forks" icon="copy">
+    Parallel design exploration via forks: `personal-site` / `-var-1` / `-var-2`, mirroring `GreekCore-v1` vs `greekcore-v2`.
+  </Card>
+  <Card title="Per-project launch config" icon="play">
+    A per-project `.claude/launch.json` configures the `/run` skill's app-launch behavior.
+  </Card>
+  <Card title="Linear in the loop" icon="git-pull-request">
+    The Linear plugin is used actively; Figma is installed but lightly used so far.
+  </Card>
+</CardGroup>
+
+<Tip>
+  **Heaviest usage:** GreekCore v2 is the primary daily driver, followed by `personal-site` and `relic-core`.
+</Tip>

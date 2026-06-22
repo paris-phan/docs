@@ -1,0 +1,45 @@
+---
+title: "Ventures"
+description: "GreekCore, Relic, and Mavri Studio — the three products, what they do, and where to go deep."
+---
+
+Three products in active development. Each pairs a Next.js web surface with a backend on one of the [two stack poles](/overview/ecosystem#the-two-pole-stack).
+
+<CardGroup cols={1}>
+  <Card title="GreekCore" icon="building-2" href="/ventures/greekcore">
+    A multi-repo SaaS platform for Greek-life organizations — member directory, executive governance, finance, and real-time chat — with database-level tenant isolation and automated multi-environment provisioning.
+  </Card>
+  <Card title="Relic" icon="brain" href="/ventures/relic">
+    An early memory layer for AI-native teams. Ingests engineering history into a temporal knowledge graph and serves grounded answers and executable skills to coding agents over MCP.
+  </Card>
+  <Card title="Mavri Studio" icon="palette" href="/ventures/mavri">
+    Turns brand source material (PDFs, images, URLs) into a versioned, schema-valid Brand Kit, then generates on-brand copy and imagery from it.
+  </Card>
+</CardGroup>
+
+## At a glance
+
+| Venture | Core stack | Backend pole | What makes it distinctive |
+|---|---|---|---|
+| **GreekCore** | TypeScript, React (Vite), NestJS (Fastify), Neon Postgres, Drizzle, OpenTofu | TypeScript | Postgres row-level security with a two-role split and transaction-local tenant context |
+| **Relic** | Python, `uv`, FalkorDB, Graphiti, FastMCP, SQLite | Python | Decoupled capture/graph and skill-serving halves that interact only through injected interfaces |
+| **Mavri Studio** | Python, FastAPI, SQLAlchemy, Postgres (JSONB), Pydantic v2, Pillow | Python | Versioned Brand Kit lifecycle with a deterministic Pillow compositor over generated imagery |
+
+## Common patterns
+
+Across all three, a few patterns recur:
+
+<CardGroup cols={2}>
+  <Card title="Multi-repo with a thin orchestrator" icon="folder-tree">
+    A workspace owns cross-cutting tooling; real code lives in independent child repos cloned from a manifest.
+  </Card>
+  <Card title="Clean dependency boundaries" icon="shield">
+    Domain cores stay free of I/O. Infrastructure sits behind protocols and interfaces, injected at a composition root.
+  </Card>
+  <Card title="Cost- and safety-aware AI" icon="gauge">
+    Token budgets, spend caps, and deterministic checks bound the cost and behavior of LLM calls.
+  </Card>
+  <Card title="Agent-ready by default" icon="bot">
+    MCP servers, shared `AGENTS.md` rules, and one-command local stacks make every repo legible to coding agents.
+  </Card>
+</CardGroup>
