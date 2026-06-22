@@ -13,7 +13,7 @@ The navigation in `docs.json` has four tabs:
 
 - **Overview** — the hub (`index`), the [ecosystem](overview/ecosystem.mdx) map, and the [repository directory](overview/repositories.mdx).
 - **Ventures** — `ventures/<name>/index.mdx` (product overview) + `architecture.mdx` (deep dive) for GreekCore, Relic, and Mavri.
-- **Labs** — the agent-simulator deep dive and a project index.
+- **Labs** — the Pelagic AI deep dive and a project index.
 - **Engineering** — workstation, Claude Code config, conventions, and workspace orchestration.
 
 ## Terminology
